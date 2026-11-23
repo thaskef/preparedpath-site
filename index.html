@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>Prepared Path</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#0d100d; --surface:#161a15; --surface-2:#1d221c; --text:#ece6d6; --dim:#8a9b84; --border:#2c332a; --accent:#d9a441; --accent-text:#0d100d; --radius:10px;
+    --font-spoken:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ color-scheme:light; --bg:#ece6d6; --surface:#f6f1e3; --surface-2:#e2dac4; --text:#1c201a; --dim:#5c6a56; --border:#c9c0a4; --accent:#9a6d14; --accent-text:#f6f1e3; }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  button,[role="button"],select,summary,input:not([type="checkbox"],[type="radio"]){min-height:2.25rem}
+  .app{display:flex;min-height:100dvh;flex-direction:column;background:var(--bg);color:var(--text)}
+  header{margin:0 auto;display:flex;width:100%;max-width:48rem;flex-direction:column;padding:1.25rem 1.25rem 0}
+  .brand{font-family:var(--font-spoken);font-size:1.125rem;line-height:1.75rem;letter-spacing:.025em;margin:0}
+  .brand span{color:var(--accent)}
+  .tagline{margin:.125rem 0 0;font-size:.75rem;line-height:1rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .scroll{margin:0 auto;width:100%;max-width:48rem;flex:1;overflow-y:auto;padding:0 1.25rem}
+  main{display:flex;min-height:100%;flex-direction:column;justify-content:center;padding:2rem 0}
+  .spoken-btn{display:block;width:100%;cursor:default;text-align:left;background:none;border:none;padding:0;color:inherit}
+  .spoken{font-family:var(--font-spoken);line-height:1.25;white-space:pre-line;margin:0}
+  .spoken.large{font-size:2.25rem}
+  .spoken.medium{font-size:1.5rem}
+  @media(min-width:640px){ .spoken.large{font-size:2.875rem} .spoken.medium{font-size:1.875rem} }
+  @keyframes caret-blink{0%,45%{opacity:1}50%,95%{opacity:0}}
+  .type-caret{animation:caret-blink .9s steps(1) infinite;color:var(--accent)}
+  @keyframes rise-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .rise-in{animation:rise-in .45s ease-out both}
+  @media(prefers-reduced-motion:reduce){.rise-in,.type-caret{animation:none}}
+  .panel-label{font-size:.75rem;line-height:1rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin:0}
+  .card{border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);padding:1.25rem}
+  .mt-6{margin-top:1.5rem}.mt-8{margin-top:2rem}
+  .domains-grid{margin:0;padding:0;list-style:none;margin-top:.75rem;display:grid;grid-template-columns:1fr;gap:.5rem}
+  @media(min-width:640px){.domains-grid{grid-template-columns:1fr 1fr}}
+  .domains-grid li{border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);padding:.75rem .875rem;font-size:.875rem;line-height:1.375rem;color:var(--text)}
+  .founder-name{font-family:var(--font-spoken);font-size:1.5rem;line-height:2rem;margin:0;color:var(--text)}
+  .founder-role{margin:.25rem 0 0;font-size:.875rem;line-height:1.25rem;color:var(--dim)}
+  .founder-list{margin:1rem 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.625rem}
+  .founder-list li{display:flex;gap:.625rem;font-size:.875rem;line-height:1.625;color:var(--text)}
+  .dot{margin-top:9px;height:4px;width:4px;flex-shrink:0;border-radius:9999px;background:var(--accent)}
+  .meeting-list{margin:.75rem 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.625rem}
+  .meeting-list li{display:flex;gap:.75rem;font-size:.875rem;line-height:1.625;color:var(--text)}
+  .meeting-num{font-family:var(--font-spoken);font-size:1rem;line-height:1.5rem;color:var(--accent)}
+  .meeting-note{margin:1rem 0 0;font-size:.875rem;line-height:1.625;color:var(--dim)}
+  /* signup form */
+  .form-title{font-family:var(--font-spoken);font-size:1.25rem;line-height:1.75rem;margin:0;color:var(--text)}
+  .form-sub{margin:.25rem 0 0;font-size:.875rem;line-height:1.25rem;color:var(--dim)}
+  .fields{margin-top:1rem;display:flex;flex-direction:column;gap:.75rem}
+  .field label,.field legend{display:block;margin-bottom:.25rem;font-size:.875rem;line-height:1.25rem;font-weight:500;color:var(--text)}
+  .field legend{margin-bottom:.5rem}
+  fieldset.field{border:none;padding:0;margin:0}
+  .input{width:100%;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);padding:.625rem .875rem;font-size:1rem;line-height:1.5rem;color:var(--text);font-family:inherit}
+  .input::placeholder{color:var(--dim)}
+  .input:focus{border-color:var(--accent);outline:none}
+  textarea.input{min-height:5rem;resize:vertical}
+  .board-group{display:flex;flex-wrap:wrap;gap:.5rem}
+  .board-btn{min-height:2.75rem;border-radius:9999px;border:1px solid var(--border);padding:.5rem 1rem;font-size:.875rem;line-height:1.25rem;font-weight:500;cursor:pointer;transition:colors .15s;background:var(--bg);color:var(--text)}
+  .board-btn.selected{border-color:var(--accent);background:var(--accent);color:var(--accent-text)}
+  .form-error{margin:.75rem 0 0;font-size:.875rem;line-height:1.25rem;font-weight:500;color:#e0654a}
+  .submit-btn{margin-top:1.25rem;min-height:3rem;width:100%;border-radius:var(--radius);border:none;background:var(--accent);padding:.75rem 1.25rem;font-size:1rem;line-height:1.5rem;font-weight:600;color:var(--accent-text);cursor:pointer}
+  .submit-btn:disabled{opacity:.6}
+  .turnstile-note{margin-top:.375rem;font-size:.875rem;line-height:1.25rem;color:var(--dim)}
+  /* saved */
+  .saved-card{border-color:var(--accent)}
+  .saved-title{font-family:var(--font-spoken);font-size:1.25rem;line-height:1.75rem;margin:0}
+  .saved-body{margin:.375rem 0 0;font-size:.875rem;line-height:1.625;color:var(--dim)}
+  /* choices */
+  .choices-wrap{display:flex;flex-wrap:wrap;gap:.625rem}
+  .choice-btn{min-height:3rem;border-radius:9999px;border:1px solid var(--border);padding:.625rem 1.25rem;font-weight:500;cursor:pointer;transition:colors .15s;background:var(--surface);color:var(--text);font-size:15px}
+  .choice-btn:hover{border-color:var(--accent)}
+  .choice-btn.opening{border-color:var(--accent);font-size:1.125rem;background:transparent}
+  .choice-btn.opening:hover{background:var(--accent);color:var(--accent-text)}
+  .choice-btn.signup{border-color:var(--accent);font-weight:600}
+  .all-topics{margin-top:1rem}
+  .all-topics summary{min-height:2.25rem;cursor:pointer;padding:.375rem 0;font-size:.875rem;line-height:1.25rem;color:var(--dim)}
+  .all-topics-inner{margin-top:.5rem;display:flex;flex-wrap:wrap;gap:.5rem}
+  .topic-btn{min-height:2.5rem;border-radius:9999px;border:1px solid var(--border);padding:.5rem 1rem;font-size:.875rem;line-height:1.25rem;color:var(--text);background:transparent;cursor:pointer}
+  /* footer */
+  footer{border-top:1px solid var(--border);background:var(--bg);padding-bottom:env(safe-area-inset-bottom)}
+  .footer-inner{margin:0 auto;width:100%;max-width:48rem;padding:.75rem 1.25rem}
+  .ask-form{display:flex;align-items:center;gap:.5rem}
+  .ask-input{min-height:3rem;flex:1;border-radius:9999px;border:1px solid var(--border);background:var(--surface);padding:.625rem 1rem;font-size:1rem;line-height:1.5rem;color:var(--text);font-family:inherit}
+  .ask-input::placeholder{color:var(--dim)}
+  .ask-input:focus{border-color:var(--accent);outline:none}
+  .ask-btn{min-height:3rem;flex-shrink:0;border-radius:9999px;border:none;background:var(--accent);padding:.625rem 1.25rem;font-size:1rem;line-height:1.5rem;font-weight:600;color:var(--accent-text);cursor:pointer}
+  .ask-btn:disabled{opacity:.6}
+  .footer-links{margin-top:.5rem;display:flex;align-items:center;padding:0 .25rem .25rem}
+  .restart-btn{min-height:2.25rem;padding:.25rem 0;font-size:.75rem;line-height:1rem;color:var(--dim);background:none;border:none;cursor:pointer;text-underline-offset:2px}
+  .restart-btn:hover{text-decoration:underline}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <p class="brand">preparedpath<span>.ngo</span></p>
+    <p class="tagline">A Human Resiliency Collective</p>
+  </header>
+
+  <div class="scroll" id="scroll">
+    <main>
+      <button type="button" id="spokenBtn" class="spoken-btn" aria-label="Spoken message. Activate to show the full text immediately.">
+        <p class="spoken large" id="spokenText"></p>
+      </button>
+
+      <div id="savedRoot"></div>
+      <div id="panelRoot"></div>
+      <div id="choicesRoot"></div>
+    </main>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <form id="askForm" class="ask-form" aria-label="Ask a question about Prepared Path">
+        <label for="ask-input" class="sr-only">Ask anything about Prepared Path</label>
+        <input id="ask-input" class="ask-input" placeholder="Or type your own answer…" maxlength="300" autocomplete="off" />
+        <button type="submit" id="askBtn" class="ask-btn" aria-label="Send question">Ask</button>
+      </form>
+      <div class="footer-links">
+        <button type="button" id="restartBtn" class="restart-btn">Start over</button>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script>
+(function(){
+  var CHAT_URL = "https://api.preparedpath.ngo/api/chat";
+  var SIGNUP_URL = "https://api.preparedpath.ngo/api/signup";
+  var TURNSTILE_SITE_KEY = "0x4AAAAAAGOF-_yrSyyL7LYN";
+  var ALLOWED_ACTIONS = ["show_signup_form","show_choices","show_domains","show_founder","show_first_meeting"];
+
+  var DOMAINS = [
+    "Food security, production, preservation, and nutrition",
+    "Shelter of all kinds — hardened and makeshift",
+    "Water purification",
+    "Air filtration and filtration generally, including infectious-disease prevention",
+    "Defenses for settlements",
+    "First aid now, medicine for rebuilding society",
+    "Engineering to rebuild what was lost, in a better way",
+    "Making all materials needed to survive off the land",
+    "Sustainable living and sustainable society building",
+    "Robotics and AI expertise",
+    "Cybersecurity — so the collective isn't hackable",
+    "Off-grid energy generation and storage",
+    "Off-grid communications — mesh networks, radio",
+    "Sanitation and waste systems",
+    "Governance and conflict resolution for settlements",
+    "Mental health and community resilience",
+    "Scientists and engineers throughout, continually iterating and improving all methods"
+  ];
+  var FOUNDER = {
+    name: "Jerry Skefos", credentials: "PhD, MBA", role: "Founder — Prepared Path is his brainchild.",
+    background: [
+      "Works at the interface of biomedical research and computer science.",
+      "Formal training in molecular neurobiology at Boston University School of Medicine, and technology commercialization at University of California, San Diego.",
+      "Works in the tech transfer office of Johns Hopkins, helping translate research from the labs to society.",
+      "Early career in infectious disease; accurately predicted Covid-19 would become a global pandemic while it was still in its infancy in China.",
+      "Futurist; spends the majority of his free time building personal AI tools, with significant advancements in the logic and reasoning capabilities of multi-agent workflows.",
+      "Proud father; wants to do his part to better the chances of humanity thriving on Earth and beyond."
+    ]
+  };
+  var FIRST_MEETING_TOPICS = [
+    "Requirements for the collective knowledge base that will support human resiliency",
+    "Suggestions on the roadmap and implementation plan for that project",
+    "Forward-looking discussions",
+    "Additional ways the first members are willing to contribute to building the community",
+    "Identifying gaps in expertise and resources, to facilitate recruiting the next wave of members"
+  ];
+  var HUB_CHOICES = ["What is Prepared Path?","The knowledge vault","Knowledge domains","Threats we track","Who can join?","The first meeting","Meet the founder","How can I contribute?","Why now?","Sign me up"];
+
+  var OPENING = { text: "Could you survive the next 7 days if the systems you depend on stopped working?", action: null, choices: ["Yes","No","Not sure"] };
+  var FALLBACK_REPLY = { text: "I don't have approved information on that yet — I answer only from Prepared Path's own material, and I'd rather say so than invent an answer. Here's what I can tell you about:", action: "show_choices", choices: HUB_CHOICES.slice(0,8) };
+  var SIGNUP_REPLY = { text: "Sign up to be notified of the first meeting. If you can't attend, you'll still receive the meeting notes — covering how the organization is taking shape and the initial design ideas for the knowledge base. Membership is free at the beginning; nothing needs paying for yet.", action: "show_signup_form", choices: ["What happens at the first meeting?","Who can join?","What is Prepared Path?"] };
+
+  function openingBranch(answer){
+    if(answer==="yes") return { text: "That's rarer than you'd think. Most people have never had to test it — no grid power, no running water, no supply chain, no one coming to fix it. Prepared Path exists for the people who want that answer to stay yes — and to hold the knowledge that makes it possible, for everyone.", action:"show_choices", choices:["What is Prepared Path?","The knowledge vault","Sign me up"] };
+    if(answer==="no") return { text: "You're not alone — and honestly, that's the point. Modern society encouraged people to disconnect from nature entirely and become 100% reliant on the supply chain, which recent events have shown is extremely fragile. Prepared Path is gathering the know-how that changes that answer.", action:"show_choices", choices:["What is Prepared Path?","The knowledge vault","Sign me up"] };
+    return { text: "Most people don't know — they've never had to find out. When civilization is in response mode, there's no time to work it out; the knowledge has to already exist. That's what Prepared Path is building, before it's needed.", action:"show_choices", choices:["What is Prepared Path?","The knowledge vault","Sign me up"] };
+  }
+
+  function esc(s){ var d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+  // State
+  var reply = OPENING;
+  var phase = "opening";
+  var saved = false;
+  var live = false;
+  var streaming = false;
+  var typedCount = 0;
+  var typedTimer = null;
+  var abortController = null;
+
+  var scrollEl = document.getElementById("scroll");
+  var spokenText = document.getElementById("spokenText");
+  var spokenBtn = document.getElementById("spokenBtn");
+  var savedRoot = document.getElementById("savedRoot");
+  var panelRoot = document.getElementById("panelRoot");
+  var choicesRoot = document.getElementById("choicesRoot");
+  var askForm = document.getElementById("askForm");
+  var askInput = document.getElementById("ask-input");
+  var askBtn = document.getElementById("askBtn");
+  var restartBtn = document.getElementById("restartBtn");
+
+  function isReducedMotion(){ return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+
+  function startTyping(){
+    stopTyping();
+    typedCount = 0;
+    if(live){ render(); return; }
+    if(isReducedMotion()){ typedCount = reply.text.length; render(); return; }
+    typedTimer = window.setInterval(function(){
+      if(typedCount >= reply.text.length){ stopTyping(); render(); return; }
+      typedCount = Math.min(reply.text.length, typedCount + 3);
+      render();
+      if(typedCount >= reply.text.length) stopTyping();
+    }, 16);
+    render();
+  }
+  function stopTyping(){ if(typedTimer){ window.clearInterval(typedTimer); typedTimer=null; } }
+  function finishTyping(){ if(!live){ typedCount = reply.text.length; stopTyping(); render(); } }
+
+  spokenBtn.addEventListener("click", finishTyping);
+
+  function displayDone(){
+    return live ? !streaming : typedCount >= reply.text.length;
+  }
+  function shownText(){
+    return live ? reply.text : reply.text.slice(0, typedCount);
+  }
+
+  // Signup state (persists while form is mounted)
+  var signupState = null;
+  var turnstileWidgetId = null;
+
+  function render(){
+    // spoken
+    var isOpening = (phase==="opening" && reply===OPENING);
+    spokenText.className = "spoken " + (isOpening ? "large" : "medium");
+    var txt = shownText();
+    var done = displayDone();
+    spokenText.innerHTML = esc(txt) + (!done ? '<span aria-hidden="true" class="type-caret">▍</span>' : "");
+
+    // placeholder
+    askInput.placeholder = phase==="opening" ? "Or type your own answer…" : "Ask anything about Prepared Path…";
+    askBtn.disabled = streaming;
+
+    // saved
+    if(saved){
+      savedRoot.innerHTML = '<div class="rise-in mt-6 card saved-card" role="status"><p class="saved-title">You\'re on the list.</p><p class="saved-body">You\'ll be notified when the first meeting is scheduled — and if you can\'t attend, you\'ll receive the meeting notes. Nothing is expected of you beyond that.</p></div>';
+    } else {
+      savedRoot.innerHTML = "";
+    }
+
+    var action = saved ? null : reply.action;
+
+    // panels
+    if(done && action==="show_domains"){
+      if(panelRoot.dataset.panel!=="domains"){
+        panelRoot.dataset.panel="domains";
+        var html = '<div class="rise-in mt-6"><p class="panel-label">Knowledge domains</p><ul class="domains-grid">';
+        DOMAINS.forEach(function(d){ html += "<li>"+esc(d)+"</li>"; });
+        html += "</ul></div>";
+        panelRoot.innerHTML = html;
+        teardownSignup();
+      }
+    } else if(done && action==="show_founder"){
+      if(panelRoot.dataset.panel!=="founder"){
+        panelRoot.dataset.panel="founder";
+        var fh = '<div class="rise-in mt-6 card"><p class="founder-name">'+esc(FOUNDER.name)+", "+esc(FOUNDER.credentials)+'</p><p class="founder-role">'+esc(FOUNDER.role)+'</p><ul class="founder-list">';
+        FOUNDER.background.forEach(function(b){ fh += '<li><span aria-hidden="true" class="dot"></span><span>'+esc(b)+"</span></li>"; });
+        fh += "</ul></div>";
+        panelRoot.innerHTML = fh;
+        teardownSignup();
+      }
+    } else if(done && action==="show_first_meeting"){
+      if(panelRoot.dataset.panel!=="meeting"){
+        panelRoot.dataset.panel="meeting";
+        var mh = '<div class="rise-in mt-6 card"><p class="panel-label">First meeting — on the agenda</p><ol class="meeting-list">';
+        FIRST_MEETING_TOPICS.forEach(function(t,i){ mh += '<li><span class="meeting-num">'+(i+1)+'</span><span>'+esc(t)+"</span></li>"; });
+        mh += '</ol><p class="meeting-note">Can\'t attend? You\'ll still receive the meeting notes. Membership is free at the beginning — nothing needs paying for yet.</p></div>';
+        panelRoot.innerHTML = mh;
+        teardownSignup();
+      }
+    } else if(done && action==="show_signup_form" && !saved){
+      if(panelRoot.dataset.panel!=="signup"){
+        panelRoot.dataset.panel="signup";
+        panelRoot.innerHTML = "";
+        buildSignupForm();
+      }
+    } else {
+      if(panelRoot.dataset.panel!=="none"){
+        panelRoot.dataset.panel="none";
+        panelRoot.innerHTML="";
+        teardownSignup();
+      }
+    }
+
+    // choices
+    if(done && reply.choices && reply.choices.length>0){
+      var ch = '<div class="rise-in mt-8" role="group" aria-label="Suggested responses"><div class="choices-wrap">';
+      reply.choices.forEach(function(c){
+        var cls = "choice-btn" + (phase==="opening" ? " opening" : "") + (c==="Sign me up" ? " signup" : "");
+        ch += '<button type="button" class="'+cls+'" data-choice="'+esc(c)+'">'+esc(c)+"</button>";
+      });
+      ch += "</div>";
+      if(phase==="hub"){
+        var remaining = HUB_CHOICES.filter(function(h){ return reply.choices.indexOf(h)===-1; });
+        if(remaining.length>0){
+          ch += '<div class="all-topics"><details><summary>All topics</summary><div class="all-topics-inner">';
+          remaining.forEach(function(h){ ch += '<button type="button" class="topic-btn" data-choice="'+esc(h)+'">'+esc(h)+"</button>"; });
+          ch += "</div></details></div>";
+        }
+      }
+      ch += "</div>";
+      // Only replace if changed to avoid losing details open state unnecessarily during typing — but choices only appear when done, so safe
+      if(choicesRoot.innerHTML !== ch){
+        choicesRoot.innerHTML = ch;
+        var btns = choicesRoot.querySelectorAll("[data-choice]");
+        for(var i=0;i<btns.length;i++){ btns[i].addEventListener("click", function(){ choose(this.getAttribute("data-choice")); }); }
+      }
+    } else {
+      if(choicesRoot.innerHTML!=="") choicesRoot.innerHTML="";
+    }
+  }
+
+  function teardownSignup(){
+    if(turnstileWidgetId && window.turnstile){
+      try{ window.turnstile.remove(turnstileWidgetId); }catch(e){}
+      turnstileWidgetId = null;
+    }
+    signupState = null;
+  }
+
+  function buildSignupForm(){
+    signupState = { name:"", email:"", contribute:"", board:"not_sure", error:null, submitting:false, token:"", failed:false };
+    var form = document.createElement("form");
+    form.className = "rise-in mt-6 card";
+    form.setAttribute("aria-label","Sign up to be notified of the first meeting");
+    form.innerHTML =
+      '<p class="form-title">Be notified of the first meeting</p>'+
+      '<p class="form-sub">If you can\'t attend, you\'ll still get the meeting notes.</p>'+
+      '<div class="fields">'+
+        '<div class="field"><label for="su-name">Your name</label><input id="su-name" class="input" autocomplete="name" placeholder="Full name" maxlength="120" required /></div>'+
+        '<div class="field"><label for="su-email">Email</label><input id="su-email" class="input" autocomplete="email" inputmode="email" placeholder="you@example.org" maxlength="200" required /></div>'+
+        '<div class="field"><label for="su-contrib">How would you like to contribute? <span style="color:var(--dim)">(optional)</span></label><textarea id="su-contrib" class="input" placeholder="Expertise, ideas, questions, connections, grant writing — anything you feel you can offer" maxlength="1000"></textarea></div>'+
+        '<fieldset class="field"><legend>Willing to serve on the initial board of directors?</legend><div class="board-group" role="group" aria-label="Board interest">'+
+          '<button type="button" class="board-btn" data-board="yes" aria-pressed="false">Yes, I\'m willing</button>'+
+          '<button type="button" class="board-btn selected" data-board="not_sure" aria-pressed="true">Not sure yet</button>'+
+          '<button type="button" class="board-btn" data-board="no" aria-pressed="false">No</button>'+
+        '</div></fieldset>'+
+        '<div class="field"><div id="turnstile-slot" aria-label="Verification check"></div><p class="turnstile-note" id="turnstile-note" style="display:none">The verification check couldn\'t load — you may need to reload the page before signing up.</p></div>'+
+      '</div>'+
+      '<p role="alert" class="form-error" id="su-error" style="display:none"></p>'+
+      '<button type="submit" class="submit-btn" id="su-submit">Notify me about the first meeting</button>';
+
+    panelRoot.appendChild(form);
+
+    var nameEl = form.querySelector("#su-name");
+    var emailEl = form.querySelector("#su-email");
+    var contribEl = form.querySelector("#su-contrib");
+    var errorEl = form.querySelector("#su-error");
+    var submitEl = form.querySelector("#su-submit");
+    var noteEl = form.querySelector("#turnstile-note");
+
+    nameEl.addEventListener("input", function(){ signupState.name = nameEl.value; });
+    emailEl.addEventListener("input", function(){ signupState.email = emailEl.value; });
+    contribEl.addEventListener("input", function(){ signupState.contribute = contribEl.value; });
+
+    var boardBtns = form.querySelectorAll("[data-board]");
+    function syncBoard(){
+      for(var i=0;i<boardBtns.length;i++){
+        var v = boardBtns[i].getAttribute("data-board");
+        var sel = signupState.board===v;
+        boardBtns[i].classList.toggle("selected", sel);
+        boardBtns[i].setAttribute("aria-pressed", sel ? "true" : "false");
+      }
+    }
+    for(var j=0;j<boardBtns.length;j++){
+      boardBtns[j].addEventListener("click", function(){ signupState.board = this.getAttribute("data-board"); syncBoard(); });
+    }
+
+    function showError(msg){
+      signupState.error = msg;
+      if(msg){ errorEl.textContent = msg; errorEl.style.display="block"; } else { errorEl.textContent=""; errorEl.style.display="none"; }
+    }
+    signupState._showError = showError;
+
+    // Turnstile render
+    function renderWidget(){
+      var slot = form.querySelector("#turnstile-slot");
+      if(!slot || !window.turnstile || turnstileWidgetId) return;
+      try{
+        turnstileWidgetId = window.turnstile.render(slot, {
+          sitekey: TURNSTILE_SITE_KEY,
+          callback: function(token){ signupState.token = token; signupState.failed = false; noteEl.style.display="none"; },
+          "expired-callback": function(){ signupState.token=""; },
+          "error-callback": function(){ signupState.token=""; signupState.failed=true; noteEl.style.display="block"; }
+        });
+      }catch(e){ signupState.failed=true; noteEl.style.display="block"; }
+    }
+    if(window.turnstile){ renderWidget(); }
+    else {
+      var tries=0;
+      var iv = window.setInterval(function(){
+        tries++;
+        if(window.turnstile){ window.clearInterval(iv); renderWidget(); }
+        else if(tries>50){ window.clearInterval(iv); signupState.failed=true; if(noteEl) noteEl.style.display="block"; }
+      }, 200);
+    }
+
+    form.addEventListener("submit", function(ev){
+      ev.preventDefault();
+      if(!signupState) return;
+      var name = nameEl.value.trim();
+      var email = emailEl.value.trim();
+      var contribute = contribEl.value.trim();
+      if(!name){ showError("Please add your name so we know who to notify."); return; }
+      if(!email){ showError("Please add an email address for the meeting notification."); return; }
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showError("That email address doesn't look complete — check it and try again."); return; }
+      if(!signupState.token){
+        showError(signupState.failed ? "The verification check couldn't load. Check your connection and reload the page, then try again." : "Please complete the verification check below so we know you're a real person.");
+        return;
+      }
+      showError(null);
+      signupState.submitting = true;
+      submitEl.disabled = true;
+      submitEl.textContent = "Saving…";
+      fetch(SIGNUP_URL, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ name:name, email:email, contribute:contribute, boardInterest:signupState.board, turnstileToken:signupState.token })
+      }).then(function(res){
+        return res.json().catch(function(){ return null; }).then(function(data){ return {res:res, data:data}; });
+      }).then(function(out){
+        var data = out.data; var res = out.res;
+        var apiError = (data && typeof data==="object" && "error" in data) ? String(data.error) : "";
+        var ok = res.ok && data!==null && typeof data==="object" && data.ok===true;
+        if(!ok){
+          if(turnstileWidgetId && window.turnstile){ try{ window.turnstile.reset(turnstileWidgetId); }catch(e){} }
+          signupState.token="";
+          showError(apiError==="verification failed" ? "The verification check failed. Please complete it again and resubmit." : "Your sign-up couldn't be saved just now. Please try again in a moment.");
+          return;
+        }
+        saved = true;
+        render();
+        if(scrollEl) scrollEl.scrollTo({top:0});
+      }).catch(function(){
+        showError("Couldn't reach the sign-up service. Check your connection and try again.");
+      }).finally(function(){
+        if(signupState){ signupState.submitting=false; }
+        submitEl.disabled=false;
+        submitEl.textContent="Notify me about the first meeting";
+      });
+    });
+  }
+
+  function setReply(newReply, isLive){
+    reply = newReply;
+    live = !!isLive;
+    if(scrollEl) scrollEl.scrollTo({top:0});
+    if(live){ render(); } else { startTyping(); }
+  }
+
+  function sendPrompt(prompt){
+    if(abortController) abortController.abort();
+    var controller = new AbortController();
+    abortController = controller;
+    saved = false;
+    live = true;
+    streaming = true;
+    reply = { text:"", action:null, choices:[] };
+    render();
+
+    var acc = "";
+    var metaAction = null;
+    var metaChoices = [];
+    var gotMeta = false;
+
+    function handleEvent(block){
+      var event = "message";
+      var dataLines = [];
+      var lines = block.split("\n");
+      for(var i=0;i<lines.length;i++){
+        if(lines[i].indexOf("event:")===0) event = lines[i].slice(6).trim();
+        else if(lines[i].indexOf("data:")===0) dataLines.push(lines[i].slice(5).trim());
+      }
+      if(dataLines.length===0) return;
+      var data;
+      try{ data = JSON.parse(dataLines.join("\n")); }catch(e){ return; }
+      if(!data || typeof data!=="object") return;
+      if(event==="meta"){
+        metaAction = (typeof data.action==="string" && ALLOWED_ACTIONS.indexOf(data.action)>=0) ? data.action : null;
+        metaChoices = Array.isArray(data.choices) ? data.choices.filter(function(c){ return typeof c==="string"; }) : [];
+        gotMeta = true;
+        reply = { text: reply.text, action: metaAction, choices: metaChoices };
+        render();
+      } else if(event==="delta"){
+        var t = data.text;
+        if(typeof t==="string" && t){
+          acc += t;
+          reply = { text: acc, action: reply.action, choices: reply.choices };
+          render();
+        }
+      }
+    }
+
+    fetch(CHAT_URL, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ prompt: prompt }),
+      signal: controller.signal
+    }).then(function(res){
+      if(!res.ok || !res.body) throw new Error("chat request failed");
+      var reader = res.body.getReader();
+      var decoder = new TextDecoder();
+      var buffer = "";
+      function pump(){
+        return reader.read().then(function(result){
+          if(result.done){
+            if(buffer.trim()) handleEvent(buffer);
+            if(!gotMeta && !acc) throw new Error("empty chat response");
+            if(!acc){
+              reply = { text: FALLBACK_REPLY.text, action: metaAction !== null ? metaAction : FALLBACK_REPLY.action, choices: metaChoices.length>0 ? metaChoices : FALLBACK_REPLY.choices };
+              render();
+            }
+            return;
+          }
+          buffer += decoder.decode(result.value, { stream:true }).replace(/\r\n/g,"\n");
+          var idx = buffer.indexOf("\n\n");
+          while(idx>=0){
+            var block = buffer.slice(0, idx);
+            buffer = buffer.slice(idx+2);
+            if(block.trim()) handleEvent(block);
+            idx = buffer.indexOf("\n\n");
+          }
+          return pump();
+        });
+      }
+      return pump();
+    }).catch(function(err){
+      if(err && err.name==="AbortError") return;
+      // If pump threw the empty-response error after fetch succeeded, also fallback
+      reply = FALLBACK_REPLY;
+      // If we already have meta+text, don't overwrite? Prototype throws only when empty; other errors fallback.
+      // To match prototype: if error came from empty check, acc is empty so fallback is correct.
+      // If a network error occurred mid-stream with partial text, prototype still falls back — keep that.
+      render();
+    }).finally(function(){
+      if(abortController===controller){ streaming=false; render(); }
+    });
+  }
+
+  function choose(choice){
+    if(streaming) return;
+    if(phase==="opening"){
+      var key = choice==="Yes" ? "yes" : choice==="No" ? "no" : "not_sure";
+      live = false;
+      phase = "hub";
+      setReply(openingBranch(key), false);
+      return;
+    }
+    if(choice==="Sign me up"){
+      saved = false;
+      live = false;
+      setReply(SIGNUP_REPLY, false);
+      return;
+    }
+    sendPrompt(choice);
+  }
+
+  askForm.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var q = askInput.value.trim();
+    if(!q || streaming) return;
+    askInput.value="";
+    if(phase==="opening") phase="hub";
+    sendPrompt(q);
+  });
+
+  restartBtn.addEventListener("click", function(){
+    if(abortController) abortController.abort();
+    abortController=null;
+    streaming=false;
+    live=false;
+    saved=false;
+    phase="opening";
+    reply=OPENING;
+    if(scrollEl) scrollEl.scrollTo({top:0});
+    startTyping();
+  });
+
+  // init
+  panelRoot.dataset.panel="none";
+  startTyping();
+})();
+</script>
+</body>
+</html>
