@@ -1,0 +1,5 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/neuros13/preparedpath.ngo/
+    - /bin/cp index.html $DEPLOYPATH
