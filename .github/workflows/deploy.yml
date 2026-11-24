@@ -1,0 +1,22 @@
+name: Deploy to InMotion
+
+on:
+  push:
+    branches: [main]
+    paths: [index.html]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload index.html via FTPS
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          curl --ftp-ssl --fail -T index.html \
+            -u "$FTP_USERNAME:$FTP_PASSWORD" \
+            "ftp://$FTP_HOST/index.html"
