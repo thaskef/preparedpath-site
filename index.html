@@ -228,16 +228,43 @@
     render();
   }
   function stopTyping(){ if(typedTimer){ window.clearInterval(typedTimer); typedTimer=null; } }
-  function finishTyping(){ if(!live){ typedCount = reply.text.length; stopTyping(); render(); } }
+  function finishTyping(){
+    if(live){ liveShown = reply.text.length; stopLiveReveal(); render(); }
+    else { typedCount = reply.text.length; stopTyping(); render(); }
+  }
 
   spokenBtn.addEventListener("click", finishTyping);
 
   function displayDone(){
-    return live ? !streaming : typedCount >= reply.text.length;
+    return live ? (!streaming && liveShown >= reply.text.length) : typedCount >= reply.text.length;
   }
   function shownText(){
-    return live ? reply.text : reply.text.slice(0, typedCount);
+    return live ? reply.text.slice(0, liveShown) : reply.text.slice(0, typedCount);
   }
+
+  // Live answers are revealed on a timer, NOT as network chunks arrive.
+  // The Worker enqueues the whole answer at once and the browser often
+  // delivers many SSE events in a single read, so rendering on arrival
+  // made long answers appear all at once. The reveal paces itself:
+  // gentle at the tail, faster when a large backlog is waiting.
+  var liveShown = 0;
+  var liveTimer = null;
+  function stopLiveReveal(){ if(liveTimer){ window.clearInterval(liveTimer); liveTimer=null; } }
+  function liveTick(){
+    if(!live){ stopLiveReveal(); return; }
+    var target = reply.text.length;
+    if(liveShown < target){
+      if(isReducedMotion()){ liveShown = target; }
+      else {
+        var backlog = target - liveShown;
+        var step = backlog > 900 ? 18 : backlog > 500 ? 12 : backlog > 250 ? 8 : backlog > 100 ? 5 : 3;
+        liveShown = Math.min(target, liveShown + step);
+      }
+      render();
+    }
+    if(liveShown >= target && !streaming){ stopLiveReveal(); render(); }
+  }
+  function startLiveReveal(){ if(!liveTimer){ liveTimer = window.setInterval(liveTick, 16); } }
 
   // Signup state (persists while form is mounted)
   var signupState = null;
@@ -469,7 +496,7 @@
     reply = newReply;
     live = !!isLive;
     if(scrollEl) scrollEl.scrollTo({top:0});
-    if(live){ render(); } else { startTyping(); }
+    if(live){ liveShown = reply.text.length; stopLiveReveal(); render(); } else { startTyping(); }
   }
 
   function sendPrompt(prompt){
@@ -479,8 +506,11 @@
     saved = false;
     live = true;
     streaming = true;
+    liveShown = 0;
+    stopLiveReveal();
     reply = { text:"", action:null, choices:[] };
     render();
+    startLiveReveal();
 
     var acc = "";
     var metaAction = null;
@@ -532,6 +562,8 @@
             if(!gotMeta && !acc) throw new Error("empty chat response");
             if(!acc){
               reply = { text: FALLBACK_REPLY.text, action: metaAction !== null ? metaAction : FALLBACK_REPLY.action, choices: metaChoices.length>0 ? metaChoices : FALLBACK_REPLY.choices };
+              liveShown = 0;
+              startLiveReveal();
               render();
             }
             return;
@@ -552,12 +584,14 @@
       if(err && err.name==="AbortError") return;
       // If pump threw the empty-response error after fetch succeeded, also fallback
       reply = FALLBACK_REPLY;
+      liveShown = 0;
+      startLiveReveal();
       // If we already have meta+text, don't overwrite? Prototype throws only when empty; other errors fallback.
       // To match prototype: if error came from empty check, acc is empty so fallback is correct.
       // If a network error occurred mid-stream with partial text, prototype still falls back — keep that.
       render();
     }).finally(function(){
-      if(abortController===controller){ streaming=false; render(); }
+      if(abortController===controller){ streaming=false; if(live && liveShown < reply.text.length) startLiveReveal(); render(); }
     });
   }
 
@@ -592,6 +626,8 @@
     if(abortController) abortController.abort();
     abortController=null;
     streaming=false;
+    stopLiveReveal();
+    liveShown=0;
     live=false;
     saved=false;
     phase="opening";
