@@ -5,7 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
 <link rel="icon" href="data:," />
+<meta name="page-version" content="2026-11-24-2" />
 <title>Prepared Path</title>
+<script>
+/* Self-update check: browsers were serving this page from cache after
+   deploys, so every load fetches a no-store copy of the page and, if the
+   version stamp differs, reloads once to the fresh copy. The stamp is
+   bumped on every deploy (keep the meta tag and CURRENT in sync). */
+(function(){
+  var CURRENT = "2026-11-24-2";
+  try {
+    fetch(location.pathname + "?vcheck=" + Date.now(), { cache: "no-store" })
+      .then(function(r){ return r.text(); })
+      .then(function(html){
+        var m = html.match(/name="page-version" content="([^"]+)"/);
+        if (m && m[1] !== CURRENT) {
+          location.replace(location.pathname + "?v=" + encodeURIComponent(m[1]));
+        }
+      })
+      .catch(function(){});
+  } catch(e) {}
+})();
+</script>
 <style>
   :root{
     color-scheme: dark;
