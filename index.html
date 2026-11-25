@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
 <link rel="icon" href="data:," />
-<meta name="page-version" content="2026-11-24-2" />
+<meta name="page-version" content="2026-11-24-3" />
 <title>Prepared Path</title>
 <script>
 /* Self-update check: browsers were serving this page from cache after
@@ -13,7 +13,7 @@
    version stamp differs, reloads once to the fresh copy. The stamp is
    bumped on every deploy (keep the meta tag and CURRENT in sync). */
 (function(){
-  var CURRENT = "2026-11-24-2";
+  var CURRENT = "2026-11-24-3";
   try {
     fetch(location.pathname + "?vcheck=" + Date.now(), { cache: "no-store" })
       .then(function(r){ return r.text(); })
@@ -115,6 +115,7 @@
   .ask-btn{min-height:3rem;flex-shrink:0;border-radius:9999px;border:none;background:var(--accent);padding:.625rem 1.25rem;font-size:1rem;line-height:1.5rem;font-weight:600;color:var(--accent-text);cursor:pointer}
   .ask-btn:disabled{opacity:.6}
   .footer-links{margin-top:.5rem;display:flex;align-items:center;padding:0 .25rem .25rem}
+  .version-stamp{margin-left:auto;font-size:.72rem;color:var(--dim);letter-spacing:.02em}
   .restart-btn{min-height:2.25rem;padding:.25rem 0;font-size:.75rem;line-height:1rem;color:var(--dim);background:none;border:none;cursor:pointer;text-underline-offset:2px}
   .restart-btn:hover{text-decoration:underline}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -148,6 +149,7 @@
       </form>
       <div class="footer-links">
         <button type="button" id="restartBtn" class="restart-btn">Start over</button>
+        <span class="version-stamp" aria-label="Page version">v2026-11-24-3</span>
       </div>
     </div>
   </footer>
